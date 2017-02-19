@@ -15,11 +15,8 @@
 #define PI 3.14159265
 
 
-// Note to self
-//
-// Image loading errors vanished when using release mode...
-
-// Consider not using integers in graphics!!
+// Note to self:
+// Image loading errors vanished when using release mode instead of debug :)
 
 
 // Forward declarations

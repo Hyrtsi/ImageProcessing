@@ -10,7 +10,7 @@
 #include <stdlib.h>		// Random
 #include <time.h>		// time
 #include <math.h>
-
+#include <numeric>		// Inner product
 
 #define PI 3.14159265
 
@@ -27,7 +27,7 @@ sf::Image voronoi(sf::Image image, unsigned int nPoints);
 sf::Image pixelate(sf::Image image, unsigned int xWindow, unsigned int yWindow);
 void saveWindow(sf::RenderWindow& window);
 
-
+std::vector<sf::Image> imageGradient(sf::Image image);
 
 
 int main()
@@ -47,11 +47,14 @@ int main()
 
 	//std::vector<sf::ConvexShape> polygons = fillQuadrilaterals(image, 30,30);
 
-	std::vector<sf::ConvexShape> hexagons = fillHexagons(image, 6.f);
+	//std::vector<sf::ConvexShape> hexagons = fillHexagons(image, 6.f);
 
 
 
 
+	// Voronoi diagram
+	// Commented temporarily away...
+	/*
 
 	unsigned int nPoints = 300;
 	image = voronoi(image, nPoints);
@@ -68,6 +71,21 @@ int main()
 	if (!image.saveToFile(fileName + pointNumber + fileType)) std::cout << "Failed saving image" << std::endl;
 
 	std::cout << "Done!" << std::endl;
+
+	*/
+
+
+
+
+
+	std::vector<sf::Image> imageGradients = imageGradient(image);
+	imageGradients[0].saveToFile("images/results/xRedGradient.png");
+	imageGradients[1].saveToFile("images/results/yRedGradient.png");
+	imageGradients[2].saveToFile("images/results/xGreenGradient.png");
+	imageGradients[3].saveToFile("images/results/yGreenGradient.png");
+	imageGradients[4].saveToFile("images/results/xBlueGradient.png");
+	imageGradients[5].saveToFile("images/results/yBlueGradient.png");
+
 
 
 
@@ -86,7 +104,7 @@ int main()
 
 		//for (auto& polygon : polygons) window.draw(polygon);
 
-		for (auto& hexagon : hexagons) window.draw(hexagon);
+		//for (auto& hexagon : hexagons) window.draw(hexagon);
 
 		window.display();
 
@@ -296,6 +314,9 @@ sf::Image voronoi(sf::Image image, unsigned int nPoints) {
 
 
 void saveWindow(sf::RenderWindow& window) {
+
+	// This function saves any drawings in the current window
+
 	sf::Texture outputTexture;
 
 	outputTexture.create(window.getSize().x, window.getSize().y);
@@ -303,4 +324,76 @@ void saveWindow(sf::RenderWindow& window) {
 
 	sf::Image outputImage = outputTexture.copyToImage();
 	outputImage.saveToFile("images/image_processed.png");
+}
+
+
+
+
+
+std::vector<sf::Image> imageGradient(sf::Image image) {
+
+	std::vector<float> convolutionMask{ -1.f, 0.f, 1.f };
+	sf::Vector2u imageSize = image.getSize();
+
+	std::vector<sf::Image> imageGradients;
+
+	sf::Image xRed;
+	xRed.create(imageSize.x, imageSize.y);
+	sf::Image yRed = xRed;
+	sf::Image xGreen = xRed;
+	sf::Image yGreen = xRed;
+	sf::Image xBlue = xRed;
+	sf::Image yBlue = xRed;
+
+
+	// Calculating image gradient
+
+	for (unsigned int y = 1; y < imageSize.y - 1; y++) {
+
+		for (unsigned int x = 1; x < imageSize.x - 1; x++) {
+
+			// We are using the version of the gradient where the gradient is smaller than the original image
+
+			// X-way gradient
+
+			std::vector<float> neighborhood{ (float)image.getPixel(x - 1, y).r, (float)image.getPixel(x, y).r, (float)image.getPixel(x + 1, y).r };
+			float convolution = std::inner_product(convolutionMask.begin(), convolutionMask.end(), neighborhood.begin(), 0.f);
+			xRed.setPixel(x, y, sf::Color(0, 0, 0, convolution));
+
+			neighborhood = { (float)image.getPixel(x - 1, y).g, (float)image.getPixel(x, y).g, (float)image.getPixel(x + 1, y).g };
+			convolution = std::inner_product(convolutionMask.begin(), convolutionMask.end(), neighborhood.begin(), 0.f);
+			xGreen.setPixel(x, y, sf::Color(0, 0, 0, convolution));
+
+			neighborhood = { (float)image.getPixel(x - 1, y).b, (float)image.getPixel(x, y).b, (float)image.getPixel(x + 1, y).b };
+			convolution = std::inner_product(convolutionMask.begin(), convolutionMask.end(), neighborhood.begin(), 0.f);
+			xBlue.setPixel(x, y, sf::Color(0, 0, 0, convolution));
+
+
+			// Y-way gradient
+
+			neighborhood = { (float)image.getPixel(x, y - 1).r, (float)image.getPixel(x, y).r, (float)image.getPixel(x, y + 1).r };
+			convolution = std::inner_product(convolutionMask.begin(), convolutionMask.end(), neighborhood.begin(), 0.f);
+			yRed.setPixel(x, y, sf::Color(0, 0, 0, convolution));
+
+			neighborhood = { (float)image.getPixel(x, y - 1).g, (float)image.getPixel(x, y).g, (float)image.getPixel(x, y + 1).g };
+			convolution = std::inner_product(convolutionMask.begin(), convolutionMask.end(), neighborhood.begin(), 0.f);
+			yGreen.setPixel(x, y, sf::Color(0, 0, 0, convolution));
+
+			neighborhood = { (float)image.getPixel(x, y - 1).b, (float)image.getPixel(x, y).b, (float)image.getPixel(x, y + 1).b };
+			convolution = std::inner_product(convolutionMask.begin(), convolutionMask.end(), neighborhood.begin(), 0.f);
+			yBlue.setPixel(x, y, sf::Color(0, 0, 0, convolution));
+
+
+		}
+
+	}
+
+	imageGradients.push_back(xRed);
+	imageGradients.push_back(yRed);
+	imageGradients.push_back(xGreen);
+	imageGradients.push_back(yGreen);
+	imageGradients.push_back(xBlue);
+	imageGradients.push_back(yBlue);
+
+	return(imageGradients);
 }

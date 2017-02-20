@@ -23,6 +23,7 @@
 
 std::vector<sf::ConvexShape> fillQuadrilaterals(sf::Image image, unsigned int xWindow, unsigned int yWindow);
 std::vector<sf::ConvexShape> fillHexagons(sf::Image image, float hexagonSize);
+sf::Image voronoi(sf::Image image, unsigned int nPoints);
 sf::Image pixelate(sf::Image image, unsigned int xWindow, unsigned int yWindow);
 void saveWindow(sf::RenderWindow& window);
 
@@ -44,10 +45,29 @@ int main()
 
 	// Editing the image
 
-	std::vector<sf::ConvexShape> polygons = fillQuadrilaterals(image, 30,30);
+	//std::vector<sf::ConvexShape> polygons = fillQuadrilaterals(image, 30,30);
 
-	//std::vector<sf::ConvexShape> hexagons = fillHexagons(image, 6.f);
+	std::vector<sf::ConvexShape> hexagons = fillHexagons(image, 6.f);
 
+
+
+
+
+	unsigned int nPoints = 300;
+	image = voronoi(image, nPoints);
+
+	// Saving the image
+	// Note! It appears not in the image folder but project folder!
+
+	std::cout << "Saving..." << std::endl;
+
+
+	std::string fileName = "voronoi_";
+	std::string pointNumber = std::to_string(nPoints);
+	std::string fileType = ".png";
+	if (!image.saveToFile(fileName + pointNumber + fileType)) std::cout << "Failed saving image" << std::endl;
+
+	std::cout << "Done!" << std::endl;
 
 
 
@@ -64,9 +84,9 @@ int main()
 
 		window.clear();
 
-		for (auto& polygon : polygons) window.draw(polygon);
+		//for (auto& polygon : polygons) window.draw(polygon);
 
-		//for (auto& hexagon : hexagons) window.draw(hexagon);
+		for (auto& hexagon : hexagons) window.draw(hexagon);
 
 		window.display();
 
@@ -221,6 +241,59 @@ sf::Image pixelate(sf::Image image, unsigned int xWindow, unsigned int yWindow) 
 
 
 }
+
+
+sf::Image voronoi(sf::Image image, unsigned int nPoints) {
+
+	sf::Vector2u imageSize = image.getSize();
+	std::vector<sf::Vector2f> seedPoints;
+
+	// Generating the seed points.
+	// In this case, we randomize them.
+	// Nice idea would be to place them around interesting regions according to image gradient perhaps
+
+	for (unsigned int i = 0; i < nPoints; i++) {
+
+		float x = rand() % imageSize.x;
+		float y = rand() % imageSize.y;
+
+		seedPoints.push_back(sf::Vector2f(x, y));
+	}
+
+
+	// Voronoi diagram
+
+	
+	for (unsigned int x = 0; x < imageSize.x; x++) {
+		for (unsigned int y = 0; y < imageSize.y; y++) {
+
+
+			sf::Vector2f closestPoint;
+			float closestDistance = imageSize.x + imageSize.y;		// Init to something "big" wrt to current measure (Lp2)
+
+			// Determine which of the seed points is closest to current (x,y)
+			for (auto& seedPoint : seedPoints) {
+
+				float distance = sqrt( pow(seedPoint.x - x, 2) + pow(seedPoint.y - y, 2) );
+
+				if (distance < closestDistance) {
+					closestDistance = distance;
+					closestPoint = seedPoint;
+				}
+			}
+
+			// Sample each point (x,y) with the color of the closest seed point
+			sf::Color cellColor = image.getPixel(closestPoint.x, closestPoint.y);
+
+			image.setPixel(x, y, cellColor);
+		}
+	}
+
+
+	return(image);
+	
+}
+
 
 void saveWindow(sf::RenderWindow& window) {
 	sf::Texture outputTexture;

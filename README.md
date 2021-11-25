@@ -2,6 +2,8 @@
 
 Partitioning an image for artistic effects.
 
+Dependencies: `windows`, `sfml`
+
 ![photo5864100449492248703](https://user-images.githubusercontent.com/17768288/143422568-302635ec-50de-4ca5-990f-5246ce4fabcd.jpg)
 
 ## Tetragon Tessellation

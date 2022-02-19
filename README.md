@@ -16,7 +16,7 @@ Dependencies: `windows`, `sfml`
 
 ![photo5854935908405586040](https://user-images.githubusercontent.com/17768288/143422652-8eaffa99-d9fd-4836-bd36-2878a8cba2a0.jpg)
 
-## Hexagod Tessellation
+## Hexagon Tessellation
 
 - Same, but with hexagonal coordinate system
 - Cool, eh?
